@@ -8,6 +8,8 @@ import EmptyState from "../components/ui/EmptyState";
 export default function ReminderFormPage() {
   const [params] = useSearchParams();
   const defaultPersonId = params.get("person") || "";
+  const defaultInteractionId = params.get("interaction") || "";
+  const defaultText = params.get("text") || "";
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const peopleQuery = useQuery({ queryKey: ["people", "form"], queryFn: () => api.people() });
@@ -33,6 +35,8 @@ export default function ReminderFormPage() {
       <ReminderForm
         people={peopleQuery.data || []}
         defaultPersonId={defaultPersonId}
+        defaultInteractionId={defaultInteractionId}
+        defaultText={defaultText}
         onSubmit={mutation.mutate}
         submitting={mutation.isPending}
       />

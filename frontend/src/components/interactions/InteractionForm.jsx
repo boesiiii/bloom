@@ -18,6 +18,7 @@ const moods = ["positive", "neutral", "negative", "stressed", "happy", "sad", "a
 export default function InteractionForm({ people = [], initialValue, defaultPersonId, onSubmit, submitting = false }) {
   const [form, setForm] = useState(() => ({
     person: defaultPersonId || "",
+    participant_ids: defaultPersonId ? [Number(defaultPersonId)] : [],
     interaction_type: "text",
     title: "",
     body: "",
@@ -31,8 +32,15 @@ export default function InteractionForm({ people = [], initialValue, defaultPers
 
   useEffect(() => {
     if (!initialValue) return;
+    const primaryPerson = initialValue.person || initialValue.person_detail?.id || defaultPersonId || "";
+    const participantIds = initialValue.participant_ids?.length
+      ? initialValue.participant_ids.map(Number)
+      : primaryPerson
+        ? [Number(primaryPerson)]
+        : [];
     setForm({
-      person: initialValue.person || initialValue.person_detail?.id || defaultPersonId || "",
+      person: primaryPerson,
+      participant_ids: participantIds,
       interaction_type: initialValue.interaction_type || "text",
       title: initialValue.title || "",
       body: initialValue.body || "",
@@ -49,11 +57,38 @@ export default function InteractionForm({ people = [], initialValue, defaultPers
     setForm((current) => ({ ...current, [field]: value }));
   }
 
+  function updatePrimaryPerson(value) {
+    const personId = value ? Number(value) : "";
+    setForm((current) => {
+      const participantIds = personId
+        ? [personId, ...current.participant_ids.filter((id) => id !== personId)]
+        : current.participant_ids;
+      return { ...current, person: value, participant_ids: participantIds };
+    });
+  }
+
+  function toggleParticipant(personId) {
+    setForm((current) => {
+      const primaryId = current.person ? Number(current.person) : null;
+      if (personId === primaryId) return current;
+      const selected = current.participant_ids.includes(personId);
+      return {
+        ...current,
+        participant_ids: selected
+          ? current.participant_ids.filter((id) => id !== personId)
+          : [...current.participant_ids, personId]
+      };
+    });
+  }
+
   function handleSubmit(event) {
     event.preventDefault();
+    const primaryId = Number(form.person);
+    const participantIds = [primaryId, ...form.participant_ids.filter((id) => id !== primaryId)];
     onSubmit({
       ...form,
-      person: Number(form.person),
+      person: primaryId,
+      participant_ids: participantIds,
       interaction_date: toIsoFromLocal(form.interaction_date),
       duration_minutes: form.duration_minutes ? Number(form.duration_minutes) : null,
       tag_names: form.tag_names.split(",").map((tag) => tag.trim()).filter(Boolean)
@@ -68,7 +103,7 @@ export default function InteractionForm({ people = [], initialValue, defaultPers
           <select
             required
             value={form.person}
-            onChange={(event) => update("person", event.target.value)}
+            onChange={(event) => updatePrimaryPerson(event.target.value)}
             className="mt-2 min-h-12 w-full rounded-lg border border-stone-200 bg-white px-3 text-base outline-none focus:border-leaf-500"
           >
             <option value="">Choose someone</option>
@@ -79,6 +114,33 @@ export default function InteractionForm({ people = [], initialValue, defaultPers
             ))}
           </select>
         </label>
+        {people.length ? (
+          <div>
+            <span className="text-sm font-semibold text-stone-700">People there</span>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {people.map((person) => {
+                const personId = Number(person.id);
+                const active = form.participant_ids.includes(personId);
+                const isPrimary = Number(form.person) === personId;
+                return (
+                  <button
+                    key={person.id}
+                    type="button"
+                    onClick={() => toggleParticipant(personId)}
+                    className={`min-h-9 rounded-full border px-3 text-sm font-semibold transition ${
+                      active
+                        ? "border-leaf-500 bg-leaf-100 text-leaf-700"
+                        : "border-stone-200 bg-white text-stone-600"
+                    }`}
+                  >
+                    {person.name}
+                    {isPrimary ? " (main)" : ""}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        ) : null}
         <label className="block">
           <span className="text-sm font-semibold text-stone-700">Quick title</span>
           <input

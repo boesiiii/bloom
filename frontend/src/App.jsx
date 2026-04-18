@@ -4,6 +4,7 @@ import AppShell from "./components/layout/AppShell";
 import GardenPage from "./pages/GardenPage";
 import HomePage from "./pages/HomePage";
 import InteractionFormPage from "./pages/InteractionFormPage";
+import JournalPage from "./pages/JournalPage";
 import LoginPage from "./pages/LoginPage";
 import PeoplePage from "./pages/PeoplePage";
 import PersonDetailPage from "./pages/PersonDetailPage";
@@ -26,6 +27,7 @@ export default function App() {
         <Route path="/people/:id/edit" element={<PersonFormPage />} />
         <Route path="/interactions/new" element={<InteractionFormPage />} />
         <Route path="/interactions/:id/edit" element={<InteractionFormPage />} />
+        <Route path="/journal" element={<JournalPage />} />
         <Route path="/reminders" element={<RemindersPage />} />
         <Route path="/reminders/new" element={<ReminderFormPage />} />
         <Route path="/garden" element={<GardenPage />} />

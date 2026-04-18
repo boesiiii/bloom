@@ -8,13 +8,23 @@ const repeats = [
   ["daily", "Daily"],
   ["weekly", "Weekly"],
   ["biweekly", "Bi-weekly"],
-  ["monthly", "Monthly"]
+  ["monthly", "Monthly"],
+  ["yearly", "Yearly"]
 ];
 
-export default function ReminderForm({ people = [], initialValue, defaultPersonId, onSubmit, submitting = false }) {
+export default function ReminderForm({
+  people = [],
+  initialValue,
+  defaultPersonId,
+  defaultInteractionId,
+  defaultText = "",
+  onSubmit,
+  submitting = false
+}) {
   const [form, setForm] = useState({
     person: defaultPersonId || "",
-    text: "",
+    interaction: defaultInteractionId || "",
+    text: defaultText,
     due_at: formatInputDateTime(),
     repeat: "none",
     status: "pending"
@@ -24,12 +34,13 @@ export default function ReminderForm({ people = [], initialValue, defaultPersonI
     if (!initialValue) return;
     setForm({
       person: initialValue.person || initialValue.person_detail?.id || defaultPersonId || "",
+      interaction: initialValue.interaction || defaultInteractionId || "",
       text: initialValue.text || "",
       due_at: formatInputDateTime(initialValue.due_at),
       repeat: initialValue.repeat || "none",
       status: initialValue.status || "pending"
     });
-  }, [initialValue, defaultPersonId]);
+  }, [initialValue, defaultPersonId, defaultInteractionId]);
 
   function update(field, value) {
     setForm((current) => ({ ...current, [field]: value }));
@@ -40,6 +51,7 @@ export default function ReminderForm({ people = [], initialValue, defaultPersonI
     onSubmit({
       ...form,
       person: Number(form.person),
+      interaction: form.interaction ? Number(form.interaction) : null,
       due_at: toIsoFromLocal(form.due_at)
     });
   }

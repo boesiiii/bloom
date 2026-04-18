@@ -21,9 +21,6 @@ export default function HealthSummaryCard({ summary = {} }) {
           </div>
         ))}
       </div>
-      <p className="mt-4 rounded-lg bg-sun-100 p-3 text-sm font-medium text-stone-800">
-        {summary.overdue_goals || 0} cadence goals and {summary.overdue_reminders || 0} reminders need a gentle look.
-      </p>
     </Card>
   );
 }

@@ -39,7 +39,13 @@ class InteractionJournalEntry(models.Model):
     duration_minutes = models.PositiveIntegerField(null=True, blank=True)
     was_meaningful = models.BooleanField(default=True)
     follow_up_needed = models.BooleanField(default=False)
+    follow_up_completed_at = models.DateTimeField(null=True, blank=True)
     tags = models.ManyToManyField("InteractionTag", through="InteractionTagMap", related_name="interactions")
+    participants = models.ManyToManyField(
+        "people.Person",
+        through="InteractionParticipant",
+        related_name="journal_entries",
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -79,3 +85,18 @@ class InteractionTagMap(models.Model):
 
     def __str__(self):
         return f"{self.interaction_id}:{self.tag}"
+
+
+class InteractionParticipant(models.Model):
+    interaction = models.ForeignKey(InteractionJournalEntry, on_delete=models.CASCADE)
+    person = models.ForeignKey("people.Person", on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ("interaction", "person")
+        indexes = [
+            models.Index(fields=["person", "interaction"]),
+        ]
+
+    def __str__(self):
+        return f"{self.interaction_id}:{self.person_id}"

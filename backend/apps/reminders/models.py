@@ -8,6 +8,7 @@ class ReminderRepeat(models.TextChoices):
     WEEKLY = "weekly", "Weekly"
     BIWEEKLY = "biweekly", "Bi-weekly"
     MONTHLY = "monthly", "Monthly"
+    YEARLY = "yearly", "Yearly"
 
 
 class ReminderStatus(models.TextChoices):
@@ -15,6 +16,11 @@ class ReminderStatus(models.TextChoices):
     DONE = "done", "Done"
     SNOOZED = "snoozed", "Snoozed"
     MISSED = "missed", "Missed"
+
+
+class ReminderKind(models.TextChoices):
+    CUSTOM = "custom", "Custom"
+    BIRTHDAY = "birthday", "Birthday"
 
 
 class Reminder(models.Model):
@@ -31,6 +37,7 @@ class Reminder(models.Model):
     due_at = models.DateTimeField()
     repeat = models.CharField(max_length=20, choices=ReminderRepeat.choices, default=ReminderRepeat.NONE)
     status = models.CharField(max_length=20, choices=ReminderStatus.choices, default=ReminderStatus.PENDING)
+    kind = models.CharField(max_length=24, choices=ReminderKind.choices, default=ReminderKind.CUSTOM)
     completed_at = models.DateTimeField(null=True, blank=True)
     snooze_count = models.PositiveIntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -41,6 +48,7 @@ class Reminder(models.Model):
         indexes = [
             models.Index(fields=["user", "status", "due_at"]),
             models.Index(fields=["person", "due_at"]),
+            models.Index(fields=["person", "kind"]),
         ]
 
     def __str__(self):

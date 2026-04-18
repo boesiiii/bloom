@@ -2,7 +2,7 @@ from collections import defaultdict
 
 from rest_framework import serializers
 
-from apps.scoring.services import plant_state_for_points
+from apps.scoring.services import plant_state_for_person
 
 from .models import Person, PersonProfileDetail
 
@@ -32,7 +32,9 @@ class PersonBriefSerializer(serializers.ModelSerializer):
             "plant_type",
             "relationship_points",
             "relationship_health",
+            "plant_growth",
             "current_streak",
+            "disconnection_streak",
             "last_interaction_at",
             "next_goal_due_at",
             "is_overdue",
@@ -40,7 +42,7 @@ class PersonBriefSerializer(serializers.ModelSerializer):
         )
 
     def get_plant(self, obj):
-        return {"type": obj.plant_type, **plant_state_for_points(obj.relationship_points)}
+        return {"type": obj.plant_type, **plant_state_for_person(obj)}
 
 
 class PersonSerializer(serializers.ModelSerializer):
@@ -68,7 +70,9 @@ class PersonSerializer(serializers.ModelSerializer):
             "plant_type",
             "relationship_points",
             "relationship_health",
+            "plant_growth",
             "current_streak",
+            "disconnection_streak",
             "longest_streak",
             "last_interaction_at",
             "next_goal_due_at",
@@ -87,7 +91,9 @@ class PersonSerializer(serializers.ModelSerializer):
             "id",
             "plant_type",
             "relationship_health",
+            "plant_growth",
             "current_streak",
+            "disconnection_streak",
             "longest_streak",
             "last_interaction_at",
             "next_goal_due_at",
@@ -102,19 +108,41 @@ class PersonSerializer(serializers.ModelSerializer):
         return grouped
 
     def get_recent_interactions(self, obj):
-        return [
-            {
-                "id": interaction.id,
-                "interaction_type": interaction.interaction_type,
-                "title": interaction.title,
-                "body": interaction.body,
-                "mood": interaction.mood,
-                "interaction_date": interaction.interaction_date,
-                "was_meaningful": interaction.was_meaningful,
-                "follow_up_needed": interaction.follow_up_needed,
-            }
-            for interaction in obj.interactions.all()[:5]
-        ]
+        entries = []
+        for interaction in obj.interactions.all()[:5]:
+            participants = list(interaction.participants.all())
+            if not participants:
+                participants = [interaction.person]
+            entries.append(
+                {
+                    "id": interaction.id,
+                    "person": interaction.person_id,
+                    "person_detail": {"id": interaction.person_id, "name": interaction.person.name},
+                    "participant_ids": [person.id for person in participants],
+                    "participant_details": [
+                        {
+                            "id": person.id,
+                            "name": person.name,
+                            "nickname": person.nickname,
+                            "avatar_url": person.avatar_url,
+                            "relationship_type": person.relationship_type,
+                            "contact_frequency": person.contact_frequency,
+                            "plant_type": person.plant_type,
+                            "relationship_health": person.relationship_health,
+                        }
+                        for person in participants
+                    ],
+                    "interaction_type": interaction.interaction_type,
+                    "title": interaction.title,
+                    "body": interaction.body,
+                    "mood": interaction.mood,
+                    "interaction_date": interaction.interaction_date,
+                    "was_meaningful": interaction.was_meaningful,
+                    "follow_up_needed": interaction.follow_up_needed,
+                    "follow_up_completed_at": interaction.follow_up_completed_at,
+                }
+            )
+        return entries
 
     def get_reminders(self, obj):
         return [
@@ -124,6 +152,7 @@ class PersonSerializer(serializers.ModelSerializer):
                 "due_at": reminder.due_at,
                 "status": reminder.status,
                 "repeat": reminder.repeat,
+                "kind": reminder.kind,
                 "snooze_count": reminder.snooze_count,
             }
             for reminder in obj.reminders.all()[:5]
@@ -151,4 +180,4 @@ class PersonSerializer(serializers.ModelSerializer):
         return summary[:4]
 
     def get_plant(self, obj):
-        return {"type": obj.plant_type, **plant_state_for_points(obj.relationship_points)}
+        return {"type": obj.plant_type, **plant_state_for_person(obj)}

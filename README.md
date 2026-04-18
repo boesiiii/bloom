@@ -1,4 +1,4 @@
-# Second Brain for Relationships
+# Bloom
 
 A mobile-first PWA prototype for remembering relationship context, logging interactions, tracking gentle reminders, and visualizing relationship health as a plant garden.
 
@@ -77,6 +77,14 @@ npm run dev
 
 - People can be created with only a name.
 - Cadence maps to plants: daily sunflower, weekly tulip, bi-weekly orchid, monthly cactus.
+- Plants now grow from connection streaks instead of points:
+  - `0/100`: seed
+  - `1..24`: sprout
+  - `25..49`: growing
+  - `50..74`: budding
+  - `75..99`: blooming
+  - `100`: fully bloomed
+- Missed cadence windows increment `disconnection_streak`, reduce `plant_growth` by 10, and reset the plant to seed after `10/10` disconnections.
 - Relationship points stay within `0..100`.
 - Health thresholds:
   - `80..100`: thriving

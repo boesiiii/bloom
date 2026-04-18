@@ -13,7 +13,13 @@ load_dotenv(BASE_DIR / ".env")
 
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "unsafe-prototype-secret-key")
 DEBUG = os.getenv("DJANGO_DEBUG", "1") == "1"
-ALLOWED_HOSTS = os.getenv("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1,0.0.0.0").split(",")
+configured_allowed_hosts = os.getenv("DJANGO_ALLOWED_HOSTS")
+if configured_allowed_hosts:
+    ALLOWED_HOSTS = [host.strip() for host in configured_allowed_hosts.split(",") if host.strip()]
+elif DEBUG:
+    ALLOWED_HOSTS = ["*"]
+else:
+    ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -104,12 +110,13 @@ REST_FRAMEWORK = {
     "DEFAULT_PAGINATION_CLASS": None,
 }
 
+configured_cors_origins = os.getenv("CORS_ALLOWED_ORIGINS")
 CORS_ALLOWED_ORIGINS = [
     origin.strip()
-    for origin in os.getenv(
-        "CORS_ALLOWED_ORIGINS",
-        "http://localhost:5173,http://127.0.0.1:5173",
+    for origin in (
+        configured_cors_origins or "http://localhost:5173,http://127.0.0.1:5173"
     ).split(",")
     if origin.strip()
 ]
+CORS_ALLOW_ALL_ORIGINS = os.getenv("CORS_ALLOW_ALL_ORIGINS", "1" if DEBUG and not configured_cors_origins else "0") == "1"
 CORS_ALLOW_CREDENTIALS = True

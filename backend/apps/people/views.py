@@ -4,7 +4,8 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 
 from apps.scoring.serializers import RelationshipScoreEventSerializer
-from apps.scoring.services import handle_profile_enriched
+from apps.scoring.services import handle_profile_enriched, refresh_overdue_people_for_user
+from apps.reminders.services import sync_birthday_reminder
 
 from .models import Person, PersonProfileDetail
 from .serializers import PersonProfileDetailSerializer, PersonSerializer
@@ -14,9 +15,10 @@ class PersonViewSet(viewsets.ModelViewSet):
     serializer_class = PersonSerializer
 
     def get_queryset(self):
+        refresh_overdue_people_for_user(self.request.user)
         queryset = (
             Person.objects.filter(user=self.request.user)
-            .prefetch_related("profile_details", "interactions", "reminders", "score_events")
+            .prefetch_related("profile_details", "interactions__participants", "interactions__tags", "reminders", "score_events")
         )
         search = self.request.query_params.get("q")
         health = self.request.query_params.get("health")
@@ -44,7 +46,12 @@ class PersonViewSet(viewsets.ModelViewSet):
         return queryset
 
     def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
+        person = serializer.save(user=self.request.user)
+        sync_birthday_reminder(person)
+
+    def perform_update(self, serializer):
+        person = serializer.save()
+        sync_birthday_reminder(person)
 
     @action(detail=True, methods=["post"], url_path="details")
     def add_detail(self, request, pk=None):

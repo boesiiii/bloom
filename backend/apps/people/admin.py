@@ -16,8 +16,11 @@ class PersonAdmin(admin.ModelAdmin):
         "relationship_type",
         "contact_frequency",
         "plant_type",
+        "plant_growth",
         "relationship_points",
         "relationship_health",
+        "current_streak",
+        "disconnection_streak",
         "next_goal_due_at",
     )
     list_filter = ("relationship_type", "contact_frequency", "plant_type", "relationship_health", "is_favorite")

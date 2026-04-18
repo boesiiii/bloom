@@ -94,7 +94,9 @@ class Person(models.Model):
         choices=RelationshipHealth.choices,
         default=RelationshipHealth.NEEDS_ATTENTION,
     )
+    plant_growth = models.PositiveSmallIntegerField(default=0)
     current_streak = models.PositiveIntegerField(default=0)
+    disconnection_streak = models.PositiveSmallIntegerField(default=0)
     longest_streak = models.PositiveIntegerField(default=0)
     last_interaction_at = models.DateTimeField(null=True, blank=True)
     next_goal_due_at = models.DateTimeField(null=True, blank=True)
@@ -143,6 +145,8 @@ class Person(models.Model):
     def save(self, *args, **kwargs):
         self.plant_type = PLANT_BY_FREQUENCY.get(self.contact_frequency, PlantType.TULIP)
         self.relationship_points = max(0, min(100, int(self.relationship_points or 0)))
+        self.plant_growth = max(0, min(100, int(self.plant_growth or 0)))
+        self.disconnection_streak = max(0, min(10, int(self.disconnection_streak or 0)))
         self.relationship_health = self.health_for_points(self.relationship_points)
         if not self.next_goal_due_at:
             self.next_goal_due_at = self.calculate_next_goal_due()

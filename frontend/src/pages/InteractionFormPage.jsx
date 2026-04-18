@@ -23,11 +23,13 @@ export default function InteractionFormPage() {
   const mutation = useMutation({
     mutationFn: (payload) => (isEditing ? api.updateInteraction(id, payload) : api.createInteraction(payload)),
     onSuccess: (interaction) => {
+      const participantIds = interaction.participant_ids?.length ? interaction.participant_ids : [interaction.person];
       queryClient.invalidateQueries({ queryKey: ["home"] });
       queryClient.invalidateQueries({ queryKey: ["people"] });
       queryClient.invalidateQueries({ queryKey: ["garden"] });
-      queryClient.invalidateQueries({ queryKey: ["person", String(interaction.person)] });
-      navigate(`/people/${interaction.person}`);
+      queryClient.invalidateQueries({ queryKey: ["interactions"] });
+      participantIds.forEach((personId) => queryClient.invalidateQueries({ queryKey: ["person", String(personId)] }));
+      navigate(participantIds.length > 1 ? "/journal" : `/people/${interaction.person}`);
     }
   });
 

@@ -9,10 +9,12 @@ from apps.people.models import Person
 from apps.people.serializers import PersonBriefSerializer
 from apps.reminders.models import Reminder
 from apps.reminders.serializers import ReminderSerializer
+from apps.scoring.services import refresh_overdue_people_for_user
 
 
 @api_view(["GET"])
 def home(request):
+    refresh_overdue_people_for_user(request.user)
     now = timezone.now()
     people = Person.objects.filter(user=request.user)
     reminders = Reminder.objects.filter(user=request.user).select_related("person")
@@ -24,6 +26,17 @@ def home(request):
     overdue_people = people.filter(next_goal_due_at__lt=now)
     overdue_reminders = reminders.filter(status__in=["pending", "snoozed"], due_at__lt=now)
     today_reminders = reminders.filter(status__in=["pending", "snoozed"], due_at__date=now.date())
+    reminder_widget_items = reminders.filter(status__in=["pending", "snoozed"]).order_by("due_at")[:4]
+    open_follow_ups = (
+        InteractionJournalEntry.objects.filter(
+            user=request.user,
+            follow_up_needed=True,
+            follow_up_completed_at__isnull=True,
+        )
+        .select_related("person")
+        .prefetch_related("tags", "participants")
+        .order_by("-interaction_date", "-created_at")
+    )
 
     today_focus_people = list(overdue_people.order_by("relationship_points")[:3])
     if len(today_focus_people) < 3:
@@ -49,7 +62,6 @@ def home(request):
             }
         )
 
-    recent_interactions = InteractionJournalEntry.objects.filter(user=request.user).select_related("person").prefetch_related("tags")[:5]
     garden_preview = list(overdue_people.order_by("relationship_points")[:2])
     garden_preview.extend(people.exclude(id__in=[person.id for person in garden_preview]).order_by("-relationship_points")[: 4 - len(garden_preview)])
 
@@ -67,8 +79,16 @@ def home(request):
                 "overdue_reminders": overdue_reminders.count(),
                 "total": people.count(),
             },
+            "reminders_widget": {
+                "items": ReminderSerializer(reminder_widget_items, many=True, context={"request": request}).data,
+                "overdue_count": overdue_reminders.count(),
+                "today_count": today_reminders.count(),
+            },
+            "needs_follow_up_widget": {
+                "items": InteractionJournalEntrySerializer(open_follow_ups[:4], many=True, context={"request": request}).data,
+                "count": open_follow_ups.count(),
+            },
             "suggested_actions": suggested_actions[:5],
-            "recent_interactions": InteractionJournalEntrySerializer(recent_interactions, many=True, context={"request": request}).data,
             "garden_preview": PersonBriefSerializer(garden_preview, many=True).data,
         }
     )
@@ -76,7 +96,20 @@ def home(request):
 
 @api_view(["GET"])
 def garden(request):
-    queryset = Person.objects.filter(user=request.user).prefetch_related("profile_details")
+    refresh_overdue_people_for_user(request.user)
+    now = timezone.now()
+    people = Person.objects.filter(user=request.user)
+    health_counts = {
+        item["relationship_health"]: item["count"]
+        for item in people.values("relationship_health").annotate(count=Count("id"))
+    }
+    overdue_people = people.filter(next_goal_due_at__lt=now)
+    overdue_reminders = Reminder.objects.filter(
+        user=request.user,
+        status__in=["pending", "snoozed"],
+        due_at__lt=now,
+    )
+    queryset = people.prefetch_related("profile_details")
     plant_type = request.query_params.get("plant_type")
     health = request.query_params.get("health")
     if plant_type:
@@ -94,11 +127,26 @@ def garden(request):
     else:
         queryset = queryset.order_by("relationship_points", "next_goal_due_at")
 
-    return Response({"plants": PersonBriefSerializer(queryset, many=True).data})
+    return Response(
+        {
+            "relationship_health_summary": {
+                "thriving": health_counts.get("thriving", 0),
+                "healthy": health_counts.get("healthy", 0),
+                "needs_attention": health_counts.get("needs_attention", 0),
+                "at_risk": health_counts.get("at_risk", 0),
+                "dormant": health_counts.get("dormant", 0),
+                "overdue_goals": overdue_people.count(),
+                "overdue_reminders": overdue_reminders.count(),
+                "total": people.count(),
+            },
+            "plants": PersonBriefSerializer(queryset, many=True).data,
+        }
+    )
 
 
 @api_view(["GET"])
 def search(request):
+    refresh_overdue_people_for_user(request.user)
     query = request.query_params.get("q", "").strip()
     if not query:
         return Response({"people": [], "interactions": [], "reminders": []})
@@ -110,8 +158,8 @@ def search(request):
         | Q(profile_details__value__icontains=query)
     ).distinct()[:8]
     interactions = InteractionJournalEntry.objects.filter(user=request.user).filter(
-        Q(title__icontains=query) | Q(body__icontains=query) | Q(person__name__icontains=query)
-    ).select_related("person")[:8]
+        Q(title__icontains=query) | Q(body__icontains=query) | Q(person__name__icontains=query) | Q(participants__name__icontains=query)
+    ).select_related("person").prefetch_related("participants").distinct()[:8]
     reminders = Reminder.objects.filter(user=request.user).filter(
         Q(text__icontains=query) | Q(person__name__icontains=query)
     ).select_related("person")[:8]

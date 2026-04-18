@@ -20,12 +20,13 @@ class ReminderSerializer(serializers.ModelSerializer):
             "due_at",
             "repeat",
             "status",
+            "kind",
             "completed_at",
             "snooze_count",
             "created_at",
             "updated_at",
         )
-        read_only_fields = ("id", "user", "completed_at", "snooze_count", "created_at", "updated_at")
+        read_only_fields = ("id", "user", "kind", "completed_at", "snooze_count", "created_at", "updated_at")
 
     def validate_person(self, person):
         request = self.context["request"]

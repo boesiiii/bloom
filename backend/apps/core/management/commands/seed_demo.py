@@ -4,9 +4,10 @@ from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand
 from django.utils import timezone
 
-from apps.interactions.models import InteractionJournalEntry, InteractionTag, InteractionTagMap
+from apps.interactions.models import InteractionJournalEntry, InteractionParticipant, InteractionTag, InteractionTagMap
 from apps.people.models import Person, PersonProfileDetail
 from apps.reminders.models import Reminder
+from apps.reminders.services import sync_birthday_reminder
 from apps.scoring.models import RelationshipScoreEvent, ScoreEventType
 
 
@@ -40,6 +41,8 @@ class Command(BaseCommand):
                 "contact_frequency": "weekly",
                 "relationship_points": 72,
                 "current_streak": 3,
+                "plant_growth": 32,
+                "disconnection_streak": 0,
                 "longest_streak": 7,
                 "last_interaction_at": now - timedelta(days=4),
                 "notes_summary": "Likes low-key plans and thoughtful check-ins.",
@@ -57,6 +60,8 @@ class Command(BaseCommand):
                 "contact_frequency": "biweekly",
                 "relationship_points": 48,
                 "current_streak": 0,
+                "plant_growth": 38,
+                "disconnection_streak": 2,
                 "longest_streak": 4,
                 "last_interaction_at": now - timedelta(days=18),
                 "next_goal_due_at": now - timedelta(days=4),
@@ -74,6 +79,8 @@ class Command(BaseCommand):
                 "contact_frequency": "monthly",
                 "relationship_points": 85,
                 "current_streak": 5,
+                "plant_growth": 82,
+                "disconnection_streak": 0,
                 "longest_streak": 5,
                 "last_interaction_at": now - timedelta(days=10),
                 "notes_summary": "A calm monthly rhythm works well.",
@@ -90,6 +97,8 @@ class Command(BaseCommand):
                 "contact_frequency": "weekly",
                 "relationship_points": 65,
                 "current_streak": 2,
+                "plant_growth": 24,
+                "disconnection_streak": 0,
                 "longest_streak": 6,
                 "last_interaction_at": now - timedelta(days=6),
                 "birthday": now.date() + timedelta(days=15),
@@ -107,6 +116,8 @@ class Command(BaseCommand):
                 "contact_frequency": "daily",
                 "relationship_points": 34,
                 "current_streak": 0,
+                "plant_growth": 16,
+                "disconnection_streak": 8,
                 "longest_streak": 9,
                 "last_interaction_at": now - timedelta(days=3),
                 "next_goal_due_at": now - timedelta(days=2),
@@ -117,6 +128,78 @@ class Command(BaseCommand):
                 ],
                 "reminders": [("Make a warm check-in", now - timedelta(hours=6), "pending")],
                 "events": [("repeated_miss", -5, "Repeated missed daily check-ins"), ("prolonged_inactivity", -8, "Long gap for a daily cadence")],
+            },
+            {
+                "name": "Leo",
+                "relationship_type": "partner",
+                "contact_frequency": "daily",
+                "relationship_points": 100,
+                "current_streak": 100,
+                "plant_growth": 100,
+                "disconnection_streak": 0,
+                "longest_streak": 100,
+                "last_interaction_at": now - timedelta(hours=3),
+                "notes_summary": "Daily connection is fully blooming.",
+                "details": [("habit", "evening walk"), ("like", "voice notes"), ("topic", "weekend plan")],
+                "interactions": [
+                    ("text", "Morning check-in", "Shared a warm start to the day.", "happy", 0, True, False, ["daily", "full bloom"]),
+                ],
+                "reminders": [("Send goodnight message", now + timedelta(hours=8), "pending")],
+                "events": [("streak_bonus", 10, "One hundred daily connections"), ("cadence_goal_met", 8, "Daily rhythm fully blooming")],
+            },
+            {
+                "name": "Nina",
+                "relationship_type": "friend",
+                "contact_frequency": "weekly",
+                "relationship_points": 100,
+                "current_streak": 100,
+                "plant_growth": 100,
+                "disconnection_streak": 0,
+                "longest_streak": 100,
+                "last_interaction_at": now - timedelta(days=2),
+                "notes_summary": "Weekly tulip showcase relationship.",
+                "details": [("hobby", "ceramics"), ("like", "brunch"), ("gift_idea", "small sketchbook")],
+                "interactions": [
+                    ("in_person", "Brunch catch-up", "Lovely relaxed brunch and studio updates.", "happy", 2, True, False, ["weekly", "full bloom"]),
+                ],
+                "reminders": [("Ask about ceramics class", now + timedelta(days=5), "pending")],
+                "events": [("streak_bonus", 10, "One hundred weekly connections"), ("cadence_goal_met", 8, "Weekly rhythm fully blooming")],
+            },
+            {
+                "name": "Omar",
+                "relationship_type": "work",
+                "contact_frequency": "biweekly",
+                "relationship_points": 100,
+                "current_streak": 100,
+                "plant_growth": 100,
+                "disconnection_streak": 0,
+                "longest_streak": 100,
+                "last_interaction_at": now - timedelta(days=6),
+                "notes_summary": "Bi-weekly orchid showcase relationship.",
+                "details": [("topic", "product ideas"), ("trait", "thoughtful"), ("preference", "planned calls")],
+                "interactions": [
+                    ("video_call", "Product ideas call", "Brainstormed calmly and saved next steps.", "positive", 6, True, False, ["biweekly", "full bloom"]),
+                ],
+                "reminders": [("Send product note", now + timedelta(days=8), "pending")],
+                "events": [("streak_bonus", 10, "One hundred bi-weekly connections"), ("cadence_goal_met", 8, "Bi-weekly rhythm fully blooming")],
+            },
+            {
+                "name": "Ivy",
+                "relationship_type": "family",
+                "contact_frequency": "monthly",
+                "relationship_points": 100,
+                "current_streak": 100,
+                "plant_growth": 100,
+                "disconnection_streak": 0,
+                "longest_streak": 100,
+                "last_interaction_at": now - timedelta(days=12),
+                "notes_summary": "Monthly cactus showcase relationship.",
+                "details": [("like", "postcards"), ("food", "lemon cake"), ("important_date", "first Sunday calls")],
+                "interactions": [
+                    ("call", "Monthly family call", "Talked about the garden and family photos.", "happy", 12, True, False, ["monthly", "full bloom"]),
+                ],
+                "reminders": [("Mail a postcard", now + timedelta(days=16), "pending")],
+                "events": [("streak_bonus", 10, "One hundred monthly connections"), ("cadence_goal_met", 8, "Monthly rhythm fully blooming")],
             },
         ]
 
@@ -130,6 +213,8 @@ class Command(BaseCommand):
                     "contact_frequency": spec["contact_frequency"],
                     "relationship_points": spec["relationship_points"],
                     "current_streak": spec["current_streak"],
+                    "plant_growth": spec["plant_growth"],
+                    "disconnection_streak": spec["disconnection_streak"],
                     "longest_streak": spec["longest_streak"],
                     "last_interaction_at": spec["last_interaction_at"],
                     "next_goal_due_at": next_due,
@@ -155,6 +240,7 @@ class Command(BaseCommand):
                     was_meaningful=meaningful,
                     follow_up_needed=follow_up,
                 )
+                InteractionParticipant.objects.get_or_create(interaction=interaction, person=person)
                 for tag_name in tags:
                     tag, _ = InteractionTag.objects.get_or_create(name=tag_name, defaults={"slug": tag_name.replace(" ", "-")})
                     InteractionTagMap.objects.get_or_create(interaction=interaction, tag=tag)
@@ -162,6 +248,7 @@ class Command(BaseCommand):
             Reminder.objects.filter(person=person).delete()
             for text, due_at, status in spec["reminders"]:
                 Reminder.objects.create(user=user, person=person, text=text, due_at=due_at, status=status)
+            sync_birthday_reminder(person)
 
             RelationshipScoreEvent.objects.filter(person=person).delete()
             for event_type, delta, reason in spec["events"]:
@@ -172,5 +259,25 @@ class Command(BaseCommand):
                     points_delta=delta,
                     reason=reason,
                 )
+
+        group_people = list(Person.objects.filter(user=user, name__in=["Tom", "Anna", "Nina"]).order_by("name"))
+        if len(group_people) == 3:
+            InteractionJournalEntry.objects.filter(user=user, title="Saturday group hangout").delete()
+            group_interaction = InteractionJournalEntry.objects.create(
+                user=user,
+                person=group_people[0],
+                interaction_type="event",
+                title="Saturday group hangout",
+                body="Football at Agrykola, then ramen. Good energy and worth making a regular Saturday thing.",
+                mood="happy",
+                interaction_date=now - timedelta(days=1),
+                was_meaningful=True,
+                follow_up_needed=False,
+            )
+            for participant in group_people:
+                InteractionParticipant.objects.get_or_create(interaction=group_interaction, person=participant)
+            for tag_name in ["group", "football", "weekend"]:
+                tag, _ = InteractionTag.objects.get_or_create(name=tag_name, defaults={"slug": tag_name.replace(" ", "-")})
+                InteractionTagMap.objects.get_or_create(interaction=group_interaction, tag=tag)
 
         self.stdout.write(self.style.SUCCESS("Seeded demo account: demo@example.com / demo12345"))

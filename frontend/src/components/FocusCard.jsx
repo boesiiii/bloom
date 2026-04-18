@@ -18,7 +18,7 @@ export default function FocusCard({ person }) {
   return (
     <Card as={Link} to={`/people/${person.id}`} className="block bg-leaf-50">
       <div className="flex gap-4">
-        <PlantVisual plantType={person.plant_type} health={person.relationship_health} className="h-24 w-24 shrink-0" />
+        <PlantVisual plantType={person.plant_type} health={person.relationship_health} plant={person.plant} className="h-24 w-24 shrink-0" />
         <div>
           <p className="text-sm font-semibold text-leaf-700">Today focus</p>
           <h2 className="mt-1 text-lg font-bold text-stone-950">{person.name}</h2>

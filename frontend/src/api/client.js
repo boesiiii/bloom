@@ -1,5 +1,18 @@
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000/api/v1";
+const API_BASE_URL = resolveApiBaseUrl();
 const TOKEN_KEY = "relationship_garden_token";
+
+function resolveApiBaseUrl() {
+  const configured = import.meta.env.VITE_API_BASE_URL;
+  const looksLikeBrokenLanValue = configured && /^https?:\/\/api(\/|$)/.test(configured);
+
+  if (configured && !looksLikeBrokenLanValue) {
+    return configured.replace(/\/$/, "");
+  }
+
+  const protocol = window.location.protocol === "https:" ? "https:" : "http:";
+  const hostname = window.location.hostname || "localhost";
+  return `${protocol}//${hostname}:8000/api/v1`;
+}
 
 export function getToken() {
   return localStorage.getItem(TOKEN_KEY);
@@ -15,10 +28,11 @@ export function setToken(token) {
 
 async function request(path, options = {}) {
   const token = getToken();
+  const shouldSendToken = token && !path.startsWith("/auth/login") && !path.startsWith("/auth/signup");
   const headers = {
     Accept: "application/json",
     ...(options.body ? { "Content-Type": "application/json" } : {}),
-    ...(token ? { Authorization: `Token ${token}` } : {}),
+    ...(shouldSendToken ? { Authorization: `Token ${token}` } : {}),
     ...options.headers
   };
 
@@ -34,6 +48,12 @@ async function request(path, options = {}) {
 
   if (!response.ok) {
     const message = data?.detail || data?.non_field_errors?.[0] || data?.email?.[0] || "Something went wrong.";
+    if (response.status === 401) {
+      setToken(null);
+      if (!window.location.pathname.startsWith("/login") && !window.location.pathname.startsWith("/signup")) {
+        window.location.assign("/login");
+      }
+    }
     const error = new Error(message);
     error.status = response.status;
     error.data = data;
@@ -69,6 +89,7 @@ export const api = {
   interaction: (id) => request(`/interactions/${id}`),
   createInteraction: (payload) => jsonRequest("/interactions", "POST", payload),
   updateInteraction: (id, payload) => jsonRequest(`/interactions/${id}`, "PATCH", payload),
+  completeInteractionFollowUp: (id) => jsonRequest(`/interactions/${id}/complete-follow-up`, "POST", {}),
   deleteInteraction: (id) => request(`/interactions/${id}`, { method: "DELETE" }),
   reminders: (params = {}) => request(`/reminders${query(params)}`),
   reminder: (id) => request(`/reminders/${id}`),

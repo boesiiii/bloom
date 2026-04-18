@@ -26,7 +26,7 @@ export default function LoginPage() {
     <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center px-4 py-8">
       <div className="mb-6">
         <p className="text-sm font-semibold text-leaf-700">Relationship Garden</p>
-        <h1 className="mt-2 text-3xl font-bold text-stone-950">Second Brain for Relationships</h1>
+        <h1 className="mt-2 text-3xl font-bold text-stone-950">Bloom</h1>
         <p className="mt-3 text-sm leading-6 text-stone-600">Log in with the demo account to explore the seeded prototype.</p>
       </div>
       <Card>

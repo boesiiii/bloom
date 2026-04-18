@@ -10,7 +10,7 @@ const styles = {
 
 export default function HealthBadge({ health }) {
   return (
-    <span className={`inline-flex min-h-7 items-center rounded-full border px-2.5 text-xs font-semibold ${styles[health] || styles.needs_attention}`}>
+    <span className={`inline-flex min-h-7 items-center whitespace-nowrap rounded-full border px-2.5 text-xs font-semibold ${styles[health] || styles.needs_attention}`}>
       {healthLabels[health] || health}
     </span>
   );
