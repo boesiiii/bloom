@@ -5,9 +5,11 @@ import { Link } from "react-router-dom";
 import { api } from "../../api/client";
 import { formatDate } from "../../utils/format";
 import PlantVisual from "../garden/PlantVisual";
+import { useToast } from "../ui/ToastProvider";
 
 export default function NeedsFollowUpWidget({ widget = {} }) {
   const queryClient = useQueryClient();
+  const toast = useToast();
   const items = widget.items || [];
   const complete = useMutation({
     mutationFn: (interaction) => api.completeInteractionFollowUp(interaction.id),
@@ -15,6 +17,7 @@ export default function NeedsFollowUpWidget({ widget = {} }) {
       queryClient.invalidateQueries({ queryKey: ["home"] });
       queryClient.invalidateQueries({ queryKey: ["interactions"] });
       if (interaction?.person) queryClient.invalidateQueries({ queryKey: ["person", String(interaction.person)] });
+      toast.success("Follow-up closed.");
     }
   });
 

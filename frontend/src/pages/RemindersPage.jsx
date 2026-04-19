@@ -7,6 +7,7 @@ import { api } from "../api/client";
 import ReminderCard from "../components/reminders/ReminderCard";
 import Chip from "../components/ui/Chip";
 import EmptyState from "../components/ui/EmptyState";
+import { useToast } from "../components/ui/ToastProvider";
 
 function groupReminders(reminders) {
   const now = new Date();
@@ -31,6 +32,7 @@ const filters = [
 export default function RemindersPage() {
   const [filter, setFilter] = useState("focus");
   const queryClient = useQueryClient();
+  const toast = useToast();
   const { data = [], isLoading, error } = useQuery({ queryKey: ["reminders"], queryFn: () => api.reminders() });
 
   const complete = useMutation({
@@ -39,6 +41,7 @@ export default function RemindersPage() {
       queryClient.invalidateQueries({ queryKey: ["reminders"] });
       queryClient.invalidateQueries({ queryKey: ["home"] });
       queryClient.invalidateQueries({ queryKey: ["people"] });
+      toast.success("Reminder completed.");
     }
   });
 
@@ -47,6 +50,7 @@ export default function RemindersPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["reminders"] });
       queryClient.invalidateQueries({ queryKey: ["home"] });
+      toast.success("Reminder moved to later.");
     }
   });
 

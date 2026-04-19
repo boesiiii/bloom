@@ -83,6 +83,7 @@ function fallbackBackPath(pathname) {
   if (pathname.startsWith("/interactions/")) return "/journal";
   if (pathname === "/reminders/new") return "/reminders";
   if (pathname === "/reminders") return "/";
+  if (pathname.startsWith("/garden/")) return "/garden";
   if (pathname === "/settings") return "/";
   if (pathname === "/garden") return "/";
   if (pathname === "/journal") return "/";

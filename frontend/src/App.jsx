@@ -2,6 +2,7 @@ import { Navigate, Route, Routes } from "react-router-dom";
 
 import AppShell from "./components/layout/AppShell";
 import GardenPage from "./pages/GardenPage";
+import GardenShopPage from "./pages/GardenShopPage";
 import HomePage from "./pages/HomePage";
 import InteractionFormPage from "./pages/InteractionFormPage";
 import JournalPage from "./pages/JournalPage";
@@ -31,6 +32,7 @@ export default function App() {
         <Route path="/reminders" element={<RemindersPage />} />
         <Route path="/reminders/new" element={<ReminderFormPage />} />
         <Route path="/garden" element={<GardenPage />} />
+        <Route path="/garden/shop" element={<GardenShopPage />} />
         <Route path="/settings" element={<SettingsPage />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />

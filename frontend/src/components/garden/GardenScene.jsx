@@ -1,4 +1,5 @@
-import { useNavigate } from "react-router-dom";
+import { Store } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
 
 const tileWidth = 104;
 const tileHeight = 58;
@@ -42,7 +43,7 @@ export default function GardenScene({ people = [] }) {
   });
 
   return (
-    <section className="overflow-hidden rounded-lg border border-stone-200 bg-[#eef5df] shadow-soft">
+    <section className="relative overflow-hidden rounded-lg border border-stone-200 bg-[#eef5df] shadow-soft">
       <svg viewBox={`0 0 380 ${sceneHeight}`} className="h-auto w-full" role="img" aria-label="Friendship garden">
         <rect width="380" height={sceneHeight} fill="#eef5df" />
         {plots
@@ -59,6 +60,14 @@ export default function GardenScene({ people = [] }) {
             />
           ))}
       </svg>
+      <Link
+        to="/garden/shop"
+        className="absolute bottom-3 right-3 z-10 grid h-14 w-14 place-items-center rounded-full border border-leaf-100 bg-white/95 text-leaf-700 shadow-lg shadow-stone-900/15 backdrop-blur active:scale-95"
+        aria-label="Open garden shop"
+        title="Garden shop"
+      >
+        <Store className="h-7 w-7" aria-hidden="true" />
+      </Link>
     </section>
   );
 }

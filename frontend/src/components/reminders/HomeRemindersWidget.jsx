@@ -5,9 +5,11 @@ import { Link } from "react-router-dom";
 import { api } from "../../api/client";
 import { formatDateTime, isOverdue } from "../../utils/format";
 import Card from "../ui/Card";
+import { useToast } from "../ui/ToastProvider";
 
 export default function HomeRemindersWidget({ widget = {} }) {
   const queryClient = useQueryClient();
+  const toast = useToast();
   const reminders = widget.items || [];
   const complete = useMutation({
     mutationFn: (reminder) => api.completeReminder(reminder.id),
@@ -15,6 +17,7 @@ export default function HomeRemindersWidget({ widget = {} }) {
       queryClient.invalidateQueries({ queryKey: ["home"] });
       queryClient.invalidateQueries({ queryKey: ["reminders"] });
       queryClient.invalidateQueries({ queryKey: ["people"] });
+      toast.success("Reminder completed.");
     }
   });
 

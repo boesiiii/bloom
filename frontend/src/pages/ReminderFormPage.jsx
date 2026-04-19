@@ -4,6 +4,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { api } from "../api/client";
 import ReminderForm from "../components/reminders/ReminderForm";
 import EmptyState from "../components/ui/EmptyState";
+import { useToast } from "../components/ui/ToastProvider";
 
 export default function ReminderFormPage() {
   const [params] = useSearchParams();
@@ -12,13 +13,24 @@ export default function ReminderFormPage() {
   const defaultText = params.get("text") || "";
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const toast = useToast();
   const peopleQuery = useQuery({ queryKey: ["people", "form"], queryFn: () => api.people() });
   const mutation = useMutation({
-    mutationFn: api.createReminder,
+    mutationFn: async (payload) => {
+      const reminder = await api.createReminder(payload);
+      if (defaultInteractionId) {
+        await api.completeInteractionFollowUp(defaultInteractionId);
+      }
+      return reminder;
+    },
     onSuccess: (reminder) => {
       queryClient.invalidateQueries({ queryKey: ["reminders"] });
       queryClient.invalidateQueries({ queryKey: ["home"] });
-      navigate(`/people/${reminder.person}`);
+      queryClient.invalidateQueries({ queryKey: ["people"] });
+      queryClient.invalidateQueries({ queryKey: ["interactions"] });
+      if (reminder?.person) queryClient.invalidateQueries({ queryKey: ["person", String(reminder.person)] });
+      toast.success(defaultInteractionId ? "Reminder saved and follow-up moved out of open loops." : "Reminder saved.");
+      navigate("/reminders");
     }
   });
 

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 
 import Card from "../ui/Card";
+import SearchableSelect from "../ui/SearchableSelect";
 
 const relationshipTypes = [
   ["friend", "Friend"],
@@ -74,34 +75,18 @@ export default function PersonForm({ initialValue, onSubmit, submitting = false 
           />
         </label>
         <div className="grid grid-cols-2 gap-3">
-          <label className="block">
-            <span className="text-sm font-semibold text-stone-700">Relationship</span>
-            <select
-              value={form.relationship_type}
-              onChange={(event) => update("relationship_type", event.target.value)}
-              className="mt-2 min-h-12 w-full rounded-lg border border-stone-200 bg-white px-3 outline-none focus:border-leaf-500"
-            >
-              {relationshipTypes.map(([value, label]) => (
-                <option key={value} value={value}>
-                  {label}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="block">
-            <span className="text-sm font-semibold text-stone-700">Cadence</span>
-            <select
-              value={form.contact_frequency}
-              onChange={(event) => update("contact_frequency", event.target.value)}
-              className="mt-2 min-h-12 w-full rounded-lg border border-stone-200 bg-white px-3 outline-none focus:border-leaf-500"
-            >
-              {frequencies.map(([value, label]) => (
-                <option key={value} value={value}>
-                  {label}
-                </option>
-              ))}
-            </select>
-          </label>
+          <SearchableSelect
+            label="Relationship"
+            value={form.relationship_type}
+            onChange={(value) => update("relationship_type", value)}
+            options={relationshipTypes.map(([value, label]) => ({ value, label }))}
+          />
+          <SearchableSelect
+            label="Cadence"
+            value={form.contact_frequency}
+            onChange={(value) => update("contact_frequency", value)}
+            options={frequencies.map(([value, label]) => ({ value, label }))}
+          />
         </div>
         <label className="block">
           <span className="text-sm font-semibold text-stone-700">Birthday</span>

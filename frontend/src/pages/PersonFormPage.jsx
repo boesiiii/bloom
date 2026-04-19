@@ -4,12 +4,14 @@ import { useNavigate, useParams } from "react-router-dom";
 import { api } from "../api/client";
 import PersonForm from "../components/people/PersonForm";
 import EmptyState from "../components/ui/EmptyState";
+import { useToast } from "../components/ui/ToastProvider";
 
 export default function PersonFormPage() {
   const { id } = useParams();
   const isEditing = Boolean(id);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const toast = useToast();
 
   const personQuery = useQuery({
     queryKey: ["person", id],
@@ -23,6 +25,7 @@ export default function PersonFormPage() {
       queryClient.invalidateQueries({ queryKey: ["people"] });
       queryClient.invalidateQueries({ queryKey: ["garden"] });
       queryClient.invalidateQueries({ queryKey: ["home"] });
+      toast.success(isEditing ? "Relationship updated." : "Relationship planted.");
       navigate(`/people/${person.id}`);
     }
   });

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 
 import Card from "../ui/Card";
+import SearchableSelect from "../ui/SearchableSelect";
 import { formatInputDateTime, toIsoFromLocal } from "../../utils/format";
 
 const interactionTypes = [
@@ -24,7 +25,6 @@ export default function InteractionForm({ people = [], initialValue, defaultPers
     body: "",
     mood: "positive",
     interaction_date: formatInputDateTime(),
-    duration_minutes: "",
     was_meaningful: true,
     follow_up_needed: false,
     tag_names: ""
@@ -46,7 +46,6 @@ export default function InteractionForm({ people = [], initialValue, defaultPers
       body: initialValue.body || "",
       mood: initialValue.mood || "positive",
       interaction_date: formatInputDateTime(initialValue.interaction_date),
-      duration_minutes: initialValue.duration_minutes || "",
       was_meaningful: Boolean(initialValue.was_meaningful),
       follow_up_needed: Boolean(initialValue.follow_up_needed),
       tag_names: initialValue.tags?.map((tag) => tag.name).join(", ") || ""
@@ -60,37 +59,19 @@ export default function InteractionForm({ people = [], initialValue, defaultPers
   function updatePrimaryPerson(value) {
     const personId = value ? Number(value) : "";
     setForm((current) => {
-      const participantIds = personId
-        ? [personId, ...current.participant_ids.filter((id) => id !== personId)]
-        : current.participant_ids;
-      return { ...current, person: value, participant_ids: participantIds };
-    });
-  }
-
-  function toggleParticipant(personId) {
-    setForm((current) => {
-      const primaryId = current.person ? Number(current.person) : null;
-      if (personId === primaryId) return current;
-      const selected = current.participant_ids.includes(personId);
-      return {
-        ...current,
-        participant_ids: selected
-          ? current.participant_ids.filter((id) => id !== personId)
-          : [...current.participant_ids, personId]
-      };
+      return { ...current, person: value, participant_ids: personId ? [personId] : [] };
     });
   }
 
   function handleSubmit(event) {
     event.preventDefault();
     const primaryId = Number(form.person);
-    const participantIds = [primaryId, ...form.participant_ids.filter((id) => id !== primaryId)];
     onSubmit({
       ...form,
       person: primaryId,
-      participant_ids: participantIds,
+      participant_ids: [primaryId],
       interaction_date: toIsoFromLocal(form.interaction_date),
-      duration_minutes: form.duration_minutes ? Number(form.duration_minutes) : null,
+      duration_minutes: initialValue?.duration_minutes ?? null,
       tag_names: form.tag_names.split(",").map((tag) => tag.trim()).filter(Boolean)
     });
   }
@@ -98,49 +79,14 @@ export default function InteractionForm({ people = [], initialValue, defaultPers
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <Card className="space-y-4">
-        <label className="block">
-          <span className="text-sm font-semibold text-stone-700">Person</span>
-          <select
-            required
-            value={form.person}
-            onChange={(event) => updatePrimaryPerson(event.target.value)}
-            className="mt-2 min-h-12 w-full rounded-lg border border-stone-200 bg-white px-3 text-base outline-none focus:border-leaf-500"
-          >
-            <option value="">Choose someone</option>
-            {people.map((person) => (
-              <option key={person.id} value={person.id}>
-                {person.name}
-              </option>
-            ))}
-          </select>
-        </label>
-        {people.length ? (
-          <div>
-            <span className="text-sm font-semibold text-stone-700">People there</span>
-            <div className="mt-2 flex flex-wrap gap-2">
-              {people.map((person) => {
-                const personId = Number(person.id);
-                const active = form.participant_ids.includes(personId);
-                const isPrimary = Number(form.person) === personId;
-                return (
-                  <button
-                    key={person.id}
-                    type="button"
-                    onClick={() => toggleParticipant(personId)}
-                    className={`min-h-9 rounded-full border px-3 text-sm font-semibold transition ${
-                      active
-                        ? "border-leaf-500 bg-leaf-100 text-leaf-700"
-                        : "border-stone-200 bg-white text-stone-600"
-                    }`}
-                  >
-                    {person.name}
-                    {isPrimary ? " (main)" : ""}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        ) : null}
+        <SearchableSelect
+          label="Person"
+          required
+          value={form.person}
+          onChange={updatePrimaryPerson}
+          placeholder="Choose someone"
+          options={people.map((person) => ({ value: String(person.id), label: person.name }))}
+        />
         <label className="block">
           <span className="text-sm font-semibold text-stone-700">Quick title</span>
           <input
@@ -161,52 +107,26 @@ export default function InteractionForm({ people = [], initialValue, defaultPers
           />
         </label>
         <div className="grid grid-cols-2 gap-3">
-          <label className="block">
-            <span className="text-sm font-semibold text-stone-700">Type</span>
-            <select
-              value={form.interaction_type}
-              onChange={(event) => update("interaction_type", event.target.value)}
-              className="mt-2 min-h-12 w-full rounded-lg border border-stone-200 bg-white px-3 outline-none focus:border-leaf-500"
-            >
-              {interactionTypes.map(([value, label]) => (
-                <option key={value} value={value}>
-                  {label}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="block">
-            <span className="text-sm font-semibold text-stone-700">Mood</span>
-            <select
-              value={form.mood}
-              onChange={(event) => update("mood", event.target.value)}
-              className="mt-2 min-h-12 w-full rounded-lg border border-stone-200 bg-white px-3 capitalize outline-none focus:border-leaf-500"
-            >
-              {moods.map((mood) => (
-                <option key={mood} value={mood}>
-                  {mood}
-                </option>
-              ))}
-            </select>
-          </label>
+          <SearchableSelect
+            label="Type"
+            value={form.interaction_type}
+            onChange={(value) => update("interaction_type", value)}
+            options={interactionTypes.map(([value, label]) => ({ value, label }))}
+          />
+          <SearchableSelect
+            label="Mood"
+            value={form.mood}
+            onChange={(value) => update("mood", value)}
+            options={moods.map((mood) => ({ value: mood, label: titleLabel(mood) }))}
+          />
         </div>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 gap-3">
           <label className="block">
             <span className="text-sm font-semibold text-stone-700">Date</span>
             <input
               type="datetime-local"
               value={form.interaction_date}
               onChange={(event) => update("interaction_date", event.target.value)}
-              className="mt-2 min-h-12 w-full rounded-lg border border-stone-200 bg-white px-3 outline-none focus:border-leaf-500"
-            />
-          </label>
-          <label className="block">
-            <span className="text-sm font-semibold text-stone-700">Minutes</span>
-            <input
-              type="number"
-              min="0"
-              value={form.duration_minutes}
-              onChange={(event) => update("duration_minutes", event.target.value)}
               className="mt-2 min-h-12 w-full rounded-lg border border-stone-200 bg-white px-3 outline-none focus:border-leaf-500"
             />
           </label>
@@ -250,4 +170,8 @@ export default function InteractionForm({ people = [], initialValue, defaultPers
       </button>
     </form>
   );
+}
+
+function titleLabel(value) {
+  return value.replace(/_/g, " ").replace(/\b\w/g, (letter) => letter.toUpperCase());
 }

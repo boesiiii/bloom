@@ -4,6 +4,7 @@ import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { api } from "../api/client";
 import InteractionForm from "../components/interactions/InteractionForm";
 import EmptyState from "../components/ui/EmptyState";
+import { useToast } from "../components/ui/ToastProvider";
 
 export default function InteractionFormPage() {
   const { id } = useParams();
@@ -12,6 +13,7 @@ export default function InteractionFormPage() {
   const isEditing = Boolean(id);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const toast = useToast();
 
   const peopleQuery = useQuery({ queryKey: ["people", "form"], queryFn: () => api.people() });
   const interactionQuery = useQuery({
@@ -29,7 +31,8 @@ export default function InteractionFormPage() {
       queryClient.invalidateQueries({ queryKey: ["garden"] });
       queryClient.invalidateQueries({ queryKey: ["interactions"] });
       participantIds.forEach((personId) => queryClient.invalidateQueries({ queryKey: ["person", String(personId)] }));
-      navigate(participantIds.length > 1 ? "/journal" : `/people/${interaction.person}`);
+      toast.success(isEditing ? "Interaction updated." : "Interaction logged.");
+      navigate("/journal");
     }
   });
 

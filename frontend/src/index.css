@@ -32,6 +32,18 @@ textarea {
   padding-bottom: max(1rem, env(safe-area-inset-bottom));
 }
 
+.success-dialog-card {
+  animation: success-dialog-pop 240ms ease-out both;
+}
+
+.success-check-ring {
+  animation: success-ring-pop 520ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.success-check-icon {
+  animation: success-check-draw 460ms ease-out 130ms both;
+}
+
 .garden-plot {
   -webkit-tap-highlight-color: transparent;
 }
@@ -72,6 +84,44 @@ textarea {
   }
 }
 
+@keyframes success-dialog-pop {
+  0% {
+    opacity: 0;
+    transform: translateY(14px) scale(0.94);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes success-ring-pop {
+  0% {
+    transform: scale(0.3);
+  }
+
+  58% {
+    transform: scale(1.12);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes success-check-draw {
+  0% {
+    opacity: 0;
+    transform: scale(0.65) rotate(-10deg);
+  }
+
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(0);
+  }
+}
+
 @keyframes garden-plant-tap-bounce {
   0% {
     transform: translateY(0) scale(1);
@@ -87,6 +137,9 @@ textarea {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .success-dialog-card,
+  .success-check-ring,
+  .success-check-icon,
   .garden-plant-bounce {
     animation: none;
   }

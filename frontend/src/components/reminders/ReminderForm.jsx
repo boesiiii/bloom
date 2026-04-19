@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 
 import Card from "../ui/Card";
+import SearchableSelect from "../ui/SearchableSelect";
 import { formatInputDateTime, toIsoFromLocal } from "../../utils/format";
 
 const repeats = [
@@ -59,22 +60,14 @@ export default function ReminderForm({
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <Card className="space-y-4">
-        <label className="block">
-          <span className="text-sm font-semibold text-stone-700">Person</span>
-          <select
-            required
-            value={form.person}
-            onChange={(event) => update("person", event.target.value)}
-            className="mt-2 min-h-12 w-full rounded-lg border border-stone-200 bg-white px-3 outline-none focus:border-leaf-500"
-          >
-            <option value="">Choose someone</option>
-            {people.map((person) => (
-              <option key={person.id} value={person.id}>
-                {person.name}
-              </option>
-            ))}
-          </select>
-        </label>
+        <SearchableSelect
+          label="Person"
+          required
+          value={form.person}
+          onChange={(value) => update("person", value)}
+          placeholder="Choose someone"
+          options={people.map((person) => ({ value: String(person.id), label: person.name }))}
+        />
         <label className="block">
           <span className="text-sm font-semibold text-stone-700">Reminder</span>
           <textarea
@@ -95,20 +88,12 @@ export default function ReminderForm({
               className="mt-2 min-h-12 w-full rounded-lg border border-stone-200 bg-white px-3 outline-none focus:border-leaf-500"
             />
           </label>
-          <label className="block">
-            <span className="text-sm font-semibold text-stone-700">Repeat</span>
-            <select
-              value={form.repeat}
-              onChange={(event) => update("repeat", event.target.value)}
-              className="mt-2 min-h-12 w-full rounded-lg border border-stone-200 bg-white px-3 outline-none focus:border-leaf-500"
-            >
-              {repeats.map(([value, label]) => (
-                <option key={value} value={value}>
-                  {label}
-                </option>
-              ))}
-            </select>
-          </label>
+          <SearchableSelect
+            label="Repeat"
+            value={form.repeat}
+            onChange={(value) => update("repeat", value)}
+            options={repeats.map(([value, label]) => ({ value, label }))}
+          />
         </div>
       </Card>
       <button
