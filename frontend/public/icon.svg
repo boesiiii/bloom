@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Relationship garden">
+  <rect width="512" height="512" rx="96" fill="#f6f7ef"/>
+  <path d="M256 388V192" stroke="#3d6732" stroke-width="24" stroke-linecap="round"/>
+  <path d="M246 258c-70-6-116-48-132-112 70-10 123 24 142 88" fill="#7faa62"/>
+  <path d="M266 288c66-12 111-52 132-116-72-7-123 29-142 92" fill="#5f8f47"/>
+  <circle cx="256" cy="152" r="56" fill="#e4a72c"/>
+  <circle cx="256" cy="152" r="24" fill="#8b5d2c"/>
+  <path d="M154 394h204l-24 54H178z" fill="#c87951"/>
+</svg>

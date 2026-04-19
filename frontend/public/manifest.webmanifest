@@ -1,0 +1,18 @@
+{
+  "name": "Bloom",
+  "short_name": "Bloom",
+  "description": "A gentle relationship memory and consistency assistant.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f6f7ef",
+  "theme_color": "#f6f7ef",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
